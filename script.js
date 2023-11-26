@@ -18,53 +18,74 @@ let cats = [
 ];
 
 
-var increaseCount = (function(name){
-  
-    var count = 0;
+var increaseCount = (function(cat){
 
-    var countEl = document.getElementById(`${name.replace(/ /g, '-')}-count`);
+    var countEl = document.getElementById(`${cat.name.replace(/ /g, '-')}-count`);
 
     return function(){
 
-        count += 1;
+        cat.clicks_count += 1;
 
-        countEl.innerText = count;
+        countEl.innerText = cat.clicks_count;
     }
 
 });
 
-var myFunction = increaseCount;
 
 let cats_container = document.getElementById('cats');
+let list = document.getElementById('list');
 
-cats.forEach(cat => {
+let ol = document.createElement('ol');
+var myFunction = increaseCount;
 
-    var div = document.createElement('div');
 
-    var title = document.createElement('h2');
-    title.innerText = cat.name;
 
-    var image = document.createElement('img');
+var showCat = (function(cat){
+    return function(){
+        console.log(cat)
+        var div = document.createElement('div');
 
-    image.setAttribute('src', cat.image_url);
-  
-    var clicks = document.createElement('h4');
-    clicks.innerText = `${cat.name}'s clicks count:`;
+        var title = document.createElement('h2');
+        title.innerText = cat.name;
+    
+        var image = document.createElement('img');
+    
+        image.setAttribute('src', cat.image_url);
+      
+        var clicks = document.createElement('h4');
+        clicks.innerText = `${cat.name}'s clicks count:`;
+    
+        var count = document.createElement('h4');
+        count.innerText = cat.clicks_count;
+        count.id = `${cat.name.replace(/ /g, '-')}-count`;
+    
+        div.id = cat.name.replace(/ /g, '-');
 
-    var count = document.createElement('h4');
-    count.id = `${cat.name.replace(/ /g, '-')}-count`;
+        div.appendChild(title);
+        div.appendChild(image);
+        div.appendChild(clicks);
+        div.appendChild(count);   
+    
+        cats_container.innerHTML = '';
+        cats_container.appendChild(div);    
+    
+        image.addEventListener('click', myFunction(cat), false);
+    }
+   
 
-    div.id = cat.name;
-
-    div.appendChild(title);
-    div.appendChild(image);
-    div.appendChild(clicks);
-    div.appendChild(count);   
-
-    cats_container.appendChild(div);    
-
-    image.addEventListener('click', myFunction(cat.name), false);
 
 });
 
 
+
+cats.forEach(cat => {
+     let listItem = document.createElement('li');
+     listItem.textContent = cat.name;
+     listItem.style.cursor = 'pointer';
+     listItem.addEventListener('click', showCat(cat), false);
+ 
+     ol.appendChild(listItem);
+});
+
+
+list.appendChild(ol);

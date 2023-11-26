@@ -1,35 +1,49 @@
 $(function(){
 
-    let cats = [
-        {
-            name: 'Kurmi',
-            image_url: 'https://static.wikia.nocookie.net/villains/images/8/88/Kuromi.png/revision/latest/thumbnail/width/360/height/360?cb=20210811094158',
-            clicks_count: 0
-        },
-        {
-            name: 'Hello Kitty',
-            image_url: 'https://static.wikia.nocookie.net/sanrio/images/1/10/Hello-kitty.png/revision/latest/scale-to-width-down/280?cb=20171105235741',
-            clicks_count: 0
-        },
-        {
-            name: 'KiKi',
-            image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTr43e5F55S6cWrm1m-M3uGhstP_-QrcjhOjT-h1Ls795tuUegCTSaVkfev8i61U0YOMsY&usqp=CAU',
-            clicks_count: 0
-        }
-    ];
+    let data = {
+        current_cat: null,
+        is_admin: false,
+        cats: [
+            {
+                name: 'Kurmi',
+                image_url: 'https://static.wikia.nocookie.net/villains/images/8/88/Kuromi.png/revision/latest/thumbnail/width/360/height/360?cb=20210811094158',
+                clicks_count: 0
+            },
+            {
+                name: 'Hello Kitty',
+                image_url: 'https://static.wikia.nocookie.net/sanrio/images/1/10/Hello-kitty.png/revision/latest/scale-to-width-down/280?cb=20171105235741',
+                clicks_count: 0
+            },
+            {
+                name: 'KiKi',
+                image_url: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTr43e5F55S6cWrm1m-M3uGhstP_-QrcjhOjT-h1Ls795tuUegCTSaVkfev8i61U0YOMsY&usqp=CAU',
+                clicks_count: 0
+            }
+        ]
+        
+    }
 
     var model = {
         init: function(){
-            if (!localStorage.cats){
-                localStorage.cats = JSON.stringify(cats);
-            }
+            // if (!localStorage.cats){
+            //     localStorage.cats = JSON.stringify(data.cats);
+            // }
         },
         add: function(obj){
-            cats.push(obj);
-            localStorage.cats = JSON.stringify(cats);
+            data.cats.push(obj);
         },
         getCats: function (){
-            return JSON.parse(localStorage.cats)
+            return data.cats; //JSON.parse(localStorage.cats)
+        },
+        getCurrentCat: function(){
+            return data.current_cat
+        },
+        setCurrentCat: function(cat){
+            data.current_cat = cat;
+        },
+        increaseCount: function(cat){
+            catItem = data.cats.find(c => c.name == cat.name);
+            catItem.clicks_count += 1;
         }
     };
 
@@ -37,71 +51,35 @@ $(function(){
     var octopus = {
         addCat: function(cat){
             model.add(cat);
-            view.render();
+            listView.render();
         },
         getCats: function(){
             return model.getCats();
         },
+        increaseCount: function(cat){
+            model.increaseCount(cat);
+        },
+        getCurrentCat: function(){
+            return model.getCurrentCat();
+        },
+        setCurrentCat: function(cat){
+            model.setCurrentCat(cat);
+        },
         init: function(){
             model.init();
-            view.init();
+            listView.init();
+            currentCatView.init();
         }
     };
 
 
-    var view = {
+    var listView = {
         init: function(){
 
-            let cats_container = document.getElementById('cats');
             this.list = document.getElementById('list');
             this.ol = document.createElement('ol');
-            var increaseCount = (function(cat){
-
-                var countEl = document.getElementById(`${cat.name.replace(/ /g, '-')}-count`);
-            
-                return function(){
-            
-                    cat.clicks_count += 1;
-            
-                    countEl.innerText = cat.clicks_count;
-                }
-            
-            });
-            this.showCat = (function(cat){
-                return function(){
-                    var div = document.createElement('div');
-            
-                    var title = document.createElement('h2');
-                    title.innerText = cat.name;
-                
-                    var image = document.createElement('img');
-                
-                    image.setAttribute('src', cat.image_url);
-                  
-                    var clicks = document.createElement('h4');
-                    clicks.innerText = `${cat.name}'s clicks count:`;
-                
-                    var count = document.createElement('h4');
-                    count.innerText = cat.clicks_count;
-                    count.id = `${cat.name.replace(/ /g, '-')}-count`;
-                
-                    div.id = cat.name.replace(/ /g, '-');
-            
-                    div.appendChild(title);
-                    div.appendChild(image);
-                    div.appendChild(clicks);
-                    div.appendChild(count);   
-                
-                    cats_container.innerHTML = '';
-                    cats_container.appendChild(div);    
-                
-                    image.addEventListener('click', increaseCount(cat), false);
-                }
-            });
-
-            view.render();
-            
-
+            listView.render();
+    
         },
         render: function(){
 
@@ -109,7 +87,13 @@ $(function(){
                 let listItem = document.createElement('li');
                 listItem.textContent = cat.name;
                 listItem.style.cursor = 'pointer';
-                listItem.addEventListener('click', this.showCat(cat), false);
+
+                listItem.onclick = (function(catCopy) {
+                    return function(){
+                        octopus.setCurrentCat(catCopy);
+                        currentCatView.render();
+                    }
+                })(cat);
             
                 this.ol.appendChild(listItem);
            });  
@@ -117,6 +101,34 @@ $(function(){
            this.list.appendChild(this.ol);
        
         }
+        
+    };
+    var currentCatView = {
+        init: function(){
+            this.catName = document.getElementById('cat-name');
+            this.catImage = document.getElementById('cat-image');
+            this.catCount = document.getElementById('cat-count');
+
+            octopus.setCurrentCat(octopus.getCats()[0]);
+
+            this.catImage.onclick = (function() {
+                return function(){
+                    octopus.increaseCount(octopus.getCurrentCat());
+                    currentCatView.render();
+                }
+            })(cat);
+            
+            currentCatView.render();
+        },
+        render: function(){
+
+            let current_cat = octopus.getCurrentCat();
+
+            this.catName.textContent  = current_cat.name;
+            this.catImage.src  = current_cat.image_url;
+            this.catCount.textContent  = 'Total Clicks: ' + current_cat.clicks_count;
+        }
+        
     };
 
     octopus.init();

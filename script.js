@@ -33,6 +33,7 @@ $(function(){
             data.cats.push(obj);
         },
         getCats: function (){
+            console.log(data.cats)
             return data.cats; //JSON.parse(localStorage.cats)
         },
         getCurrentCat: function(){
@@ -44,6 +45,12 @@ $(function(){
         increaseCount: function(cat){
             catItem = data.cats.find(c => c.name == cat.name);
             catItem.clicks_count += 1;
+        },
+        setAdminTrue: function(){
+            data.is_admin = true;
+        },
+        setAdminFalse: function(){
+            data.is_admin = false;
         }
     };
 
@@ -65,10 +72,17 @@ $(function(){
         setCurrentCat: function(cat){
             model.setCurrentCat(cat);
         },
+        setAdminTrue: function(){
+            model.setAdminTrue();
+        },
+        setAdminFalse: function(){
+            model.setAdminFalse();
+        },
         init: function(){
             model.init();
             listView.init();
             currentCatView.init();
+            adminView.init();
         }
     };
 
@@ -83,6 +97,8 @@ $(function(){
         },
         render: function(){
 
+          this.ol.innerHTML = '';
+
             octopus.getCats().forEach(cat => {
                 let listItem = document.createElement('li');
                 listItem.textContent = cat.name;
@@ -94,12 +110,11 @@ $(function(){
                         currentCatView.render();
                     }
                 })(cat);
-            
+               
                 this.ol.appendChild(listItem);
            });  
            
            this.list.appendChild(this.ol);
-       
         }
         
     };
@@ -130,6 +145,45 @@ $(function(){
         }
         
     };
+    var adminView = {
+        init: function(){
+            this.adminForm = document.getElementById('admin-form');
+            this.adminBtn = document.getElementById('admin');
+
+            this.addBtn = document.getElementById('add');
+            this.cancelBtn = document.getElementById('cancel');
+
+            this.render();
+        },
+        render: function(){
+            this.adminBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                adminForm = document.getElementById('admin-form');
+                adminForm.style.display = 'block';
+            });
+          
+            this.addBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                
+                this.catName = document.getElementById('new-cat-name');
+                this.catImage = document.getElementById('new-cat-image');
+                this.catCount = document.getElementById('new-cat-count');
+            
+                octopus.addCat( {
+                    name: this.catName.value,
+                    image_url: this.catImage.value,
+                    clicks_count: parseInt(this.catCount.value)
+                })
+              
+            });
+
+            this.cancelBtn.addEventListener('click', function(event) {
+                event.preventDefault();
+                adminForm.style.display = 'none';
+                octopus.setAdminFalse();     
+            });
+        }
+    }
 
     octopus.init();
 });
